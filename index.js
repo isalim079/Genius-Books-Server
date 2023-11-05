@@ -28,6 +28,7 @@ async function run() {
 
     const homePageData = client.db("geniusBooksDB").collection("booksOfTheMonth")
     const libraryEventsData = client.db("geniusBooksDB").collection("libraryEventsAndFeatures")
+    const booksCategoryData = client.db("geniusBooksDB").collection("booksCategories")
 
     // get data for books of the month section
     app.get("/booksOfTheMonth", async(req, res) => {
@@ -39,6 +40,13 @@ async function run() {
     // get data for library event and features
     app.get("/libraryEventsAndFeatures", async(req, res) => {
         const cursor = libraryEventsData.find()
+        const result = await cursor.toArray()
+        res.send(result)
+    })
+
+    // get data for Books Category
+    app.get("/libraryEventsAndFeatures", async(req, res) => {
+        const cursor = booksCategoryData.find()
         const result = await cursor.toArray()
         res.send(result)
     })
