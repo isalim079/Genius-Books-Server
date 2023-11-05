@@ -45,7 +45,7 @@ async function run() {
     })
 
     // get data for Books Category
-    app.get("/libraryEventsAndFeatures", async(req, res) => {
+    app.get("/booksCategories", async(req, res) => {
         const cursor = booksCategoryData.find()
         const result = await cursor.toArray()
         res.send(result)
