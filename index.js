@@ -25,6 +25,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        // creating database
         const homePageData = client
             .db("geniusBooksDB")
             .collection("booksOfTheMonth");
@@ -37,6 +38,9 @@ async function run() {
         const addBooksData = client
             .db("geniusBooksDB")
             .collection("allBooksDetails");
+        const geniusBooksUserData = client
+            .db("geniusBooksDB")
+            .collection("geniusBooksUsers");
 
         // get data for books of the month section
         app.get("/booksOfTheMonth", async (req, res) => {
@@ -74,10 +78,24 @@ async function run() {
             res.send(bookCategory);
         });
 
+        // getting genius books user data
+        app.get("/geniusBooksUsers", async (req, res) => {
+            const cursor = geniusBooksUserData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
         // post add books data
         app.post("/allBooksDetails", async (req, res) => {
             const allBooksData = req.body;
             const result = await addBooksData.insertOne(allBooksData);
+            res.send(result);
+        });
+
+        // post user info
+        app.post("/geniusBooksUsers", async (req, res) => {
+            const usersData = req.body;
+            const result = await geniusBooksUserData.insertOne(usersData);
             res.send(result);
         });
 
