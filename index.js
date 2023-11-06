@@ -1,63 +1,95 @@
-const express = require('express')
-const cors = require('cors')
-const app = express()
-require("dotenv").config()
+const express = require("express");
+const cors = require("cors");
+const app = express();
+require("dotenv").config();
 const port = process.env.PORT || 2500;
 
 // middleware
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
-
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sja1kis.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    },
 });
 
 async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        // await client.connect();
 
-    const homePageData = client.db("geniusBooksDB").collection("booksOfTheMonth")
-    const libraryEventsData = client.db("geniusBooksDB").collection("libraryEventsAndFeatures")
-    const booksCategoryData = client.db("geniusBooksDB").collection("booksCategories")
+        const homePageData = client
+            .db("geniusBooksDB")
+            .collection("booksOfTheMonth");
+        const libraryEventsData = client
+            .db("geniusBooksDB")
+            .collection("libraryEventsAndFeatures");
+        const booksCategoryData = client
+            .db("geniusBooksDB")
+            .collection("booksCategories");
+        const addBooksData = client
+            .db("geniusBooksDB")
+            .collection("allBooksDetails");
 
-    // get data for books of the month section
-    app.get("/booksOfTheMonth", async(req, res) => {
-        const cursor = homePageData.find()
-        const result = await cursor.toArray()
-        res.send(result)
-    })
+        // get data for books of the month section
+        app.get("/booksOfTheMonth", async (req, res) => {
+            const cursor = homePageData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
 
-    // get data for library event and features
-    app.get("/libraryEventsAndFeatures", async(req, res) => {
-        const cursor = libraryEventsData.find()
-        const result = await cursor.toArray()
-        res.send(result)
-    })
+        // get data for library event and features
+        app.get("/libraryEventsAndFeatures", async (req, res) => {
+            const cursor = libraryEventsData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
 
-    // get data for Books Category
-    app.get("/booksCategories", async(req, res) => {
-        const cursor = booksCategoryData.find()
-        const result = await cursor.toArray()
-        res.send(result)
-    })
+        // get data for Books Category
+        app.get("/booksCategories", async (req, res) => {
+            const cursor = booksCategoryData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+        // getting all books data
+        app.get("/category", async (req, res) => {
+            const cursor = addBooksData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        // getting specific books category data
+        app.get("/category/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const bookCategory = await addBooksData.findOne(query);
+            res.send(bookCategory);
+        });
+
+        // post add books data
+        app.post("/allBooksDetails", async (req, res) => {
+            const allBooksData = req.body;
+            const result = await addBooksData.insertOne(allBooksData);
+            res.send(result);
+        });
+
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log(
+            "Pinged your deployment. You successfully connected to MongoDB!"
+        );
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
