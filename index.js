@@ -66,8 +66,15 @@ async function run() {
             res.send(result);
         });
 
-        // getting all books data
+        // getting all books data for category
         app.get("/category", async (req, res) => {
+            const cursor = addBooksData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        // getting all books data
+        app.get("/allBooks", async (req, res) => {
             const cursor = addBooksData.find();
             const result = await cursor.toArray();
             res.send(result);
@@ -137,7 +144,7 @@ async function run() {
         // return borrowed books
         app.delete("/borrowedBooks/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { id: id};
+            const query = { id: id };
             const result = await borrowedBooksData.deleteOne(query);
             res.send(result);
         });
