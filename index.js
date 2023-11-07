@@ -41,6 +41,9 @@ async function run() {
         const geniusBooksUserData = client
             .db("geniusBooksDB")
             .collection("geniusBooksUsers");
+        const borrowedBooksData = client
+            .db("geniusBooksDB")
+            .collection("borrowedBooks");
 
         // get data for books of the month section
         app.get("/booksOfTheMonth", async (req, res) => {
@@ -78,9 +81,34 @@ async function run() {
             res.send(bookCategory);
         });
 
+        //update quantity
+        app.patch("/category/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateQuantity = req.body;
+            console.log(updateQuantity);
+            const updatedQuantity = {
+                $set: {
+                    bookQuantity: updateQuantity.bookQuantity,
+                },
+            };
+            const result = await addBooksData.updateOne(
+                filter,
+                updatedQuantity
+            );
+            res.send(result);
+        });
+
         // getting genius books user data
         app.get("/geniusBooksUsers", async (req, res) => {
             const cursor = geniusBooksUserData.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        // getting borrowed books data
+        app.get("/borrowedBooks", async (req, res) => {
+            const cursor = borrowedBooksData.find();
             const result = await cursor.toArray();
             res.send(result);
         });
@@ -96,6 +124,13 @@ async function run() {
         app.post("/geniusBooksUsers", async (req, res) => {
             const usersData = req.body;
             const result = await geniusBooksUserData.insertOne(usersData);
+            res.send(result);
+        });
+
+        // post borrowed books data
+        app.post("/borrowedBooks", async (req, res) => {
+            const borrowBooksData = req.body;
+            const result = await borrowedBooksData.insertOne(borrowBooksData);
             res.send(result);
         });
 
