@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+// const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 2500;
@@ -7,6 +9,7 @@ const port = process.env.PORT || 2500;
 // middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser())
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sja1kis.mongodb.net/?retryWrites=true&w=majority`;
@@ -19,6 +22,9 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     },
 });
+
+
+
 
 async function run() {
     try {
@@ -44,6 +50,10 @@ async function run() {
         const borrowedBooksData = client
             .db("geniusBooksDB")
             .collection("borrowedBooks");
+
+
+
+
 
         // get data for books of the month section
         app.get("/booksOfTheMonth", async (req, res) => {
@@ -102,6 +112,31 @@ async function run() {
             const result = await addBooksData.updateOne(
                 filter,
                 updatedQuantity
+            );
+            res.send(result);
+        });
+
+        // Update full book data
+        app.put("/category/:id", async (req, res) => {
+            const id = req.params.id;
+            const booksData = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateUser = {
+                $set: {
+                    name: booksData.name,
+                    bookQuantity: booksData.bookQuantity,
+                    image: booksData.image,
+                    bookCategory: booksData.bookCategory,
+                    description: booksData.description,
+                    author: booksData.author,
+                    ratingDetails: booksData.ratingDetails,
+                },
+            };
+            const result = await addBooksData.updateOne(
+                filter,
+                updateUser,
+                options
             );
             res.send(result);
         });
