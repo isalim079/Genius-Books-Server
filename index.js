@@ -1,15 +1,15 @@
 const express = require("express");
 const cors = require("cors");
-// const jwt = require('jsonwebtoken')
-const cookieParser = require("cookie-parser");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 2500;
 
 // middleware
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:5174", "http://localhost:5173", "https://genius-books-67423.web.app"]
+}));
 app.use(express.json());
-app.use(cookieParser());
+
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sja1kis.mongodb.net/?retryWrites=true&w=majority`;
