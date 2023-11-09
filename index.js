@@ -75,15 +75,13 @@ async function run() {
         });
 
         // getting all books data
-        app.get("/allBooks", verifyToken, async (req, res) => {
+        app.get("/allBooks", async (req, res) => {
             console.log("all books cookies", req.cookies);
 
             // console.log("query mail", req.query.email);
             // console.log("user mail", req.user.email);
             // console.log("token owner", req.user)
-            if (req.user.email !== req.query.email) {
-                return res.status(403).send({ message: "forbidden access" });
-            }
+
             const cursor = addBooksData.find();
             const result = await cursor.toArray();
             res.send(result);
