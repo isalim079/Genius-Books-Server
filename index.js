@@ -1,15 +1,20 @@
 const express = require("express");
 const cors = require("cors");
-// const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser')
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 2500;
 
 // middleware
-app.use(cors());
+app.use(
+    cors({
+        origin: ["http://localhost:5173", "https://genius-books-67423.web.app"],
+        credentials: true,
+    })
+);
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sja1kis.mongodb.net/?retryWrites=true&w=majority`;
@@ -23,8 +28,27 @@ const client = new MongoClient(uri, {
     },
 });
 
+// middlewares
+// const logger = (req, res, next) => {
+//     console.log( "log: info", req.method, req.url)
+//     next()
+// }
 
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+    // console.log("token in the middleware", token);
 
+    if (!token) {
+        return res.status(401).send({ message: "unauthorized access" });
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: "unauthorized access" });
+        }
+        req.user = decoded;
+        next();
+    });
+};
 
 async function run() {
     try {
@@ -51,9 +75,26 @@ async function run() {
             .db("geniusBooksDB")
             .collection("borrowedBooks");
 
+        // auth api
+        app.post("/jwt", async (req, res) => {
+            const user = req.body;
+            console.log("user for token", user);
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: "1h",
+            });
 
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+            }).send({ success: true });
+        });
 
-
+        app.post("/logout", async (req, res) => {
+            const user = req.body;
+            console.log(user, "logged out");
+            res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+        });
 
         // get data for books of the month section
         app.get("/booksOfTheMonth", async (req, res) => {
@@ -84,7 +125,15 @@ async function run() {
         });
 
         // getting all books data
-        app.get("/allBooks", async (req, res) => {
+        app.get("/allBooks", verifyToken, async (req, res) => {
+            console.log("all books cookies", req.cookies);
+
+            // console.log("query mail", req.query.email);
+            // console.log("user mail", req.user.email);
+            // console.log("token owner", req.user)
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: "forbidden access" });
+            }
             const cursor = addBooksData.find();
             const result = await cursor.toArray();
             res.send(result);
